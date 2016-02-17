@@ -150,7 +150,6 @@ func (c *CatLady) GetImage(sub string) string {
 		}).Info("Subreddit not found in cache.")
 		submissions = c.getReddit(sub)
 		c.catCache.Set(sub, submissions, cache.DefaultExpiration)
-		log.WithField("subreddit", submissions.Data.Children[0].Data.URL).Debug("Subreddit value")
 	} else {
 		log.WithFields(log.Fields{
 			"cache":     true,
@@ -161,6 +160,9 @@ func (c *CatLady) GetImage(sub string) string {
 
 	}
 	size := len(submissions.Data.Children)
+	if size == 0 {
+		return ""
+	}
 	count := 0
 	noImage := true
 	for noImage {
