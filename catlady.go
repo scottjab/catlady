@@ -41,7 +41,8 @@ type CatLady struct {
 	subreddits      map[string]string
 }
 
-func newCatLady(username string, password string, appid string, appsecret string, subreddits map[string]string) *CatLady {
+func NewCatLady(username string, password string, appid string, appsecret string, subreddits map[string]string, logLevel log.Level) *CatLady {
+	log.SetLevel(logLevel)
 	c := &CatLady{
 		catCache:        cache.New(5*time.Minute, 30*time.Second),
 		redditUsername:  username,
@@ -64,7 +65,7 @@ func (c *CatLady) getToken() {
 		log.WithError(err).Error("Failed to build Authentication POST")
 	}
 	req.Header.Add("User-Agent", userAgent)
-	req.SetBasicAuth(CONFIG.Reddit.AppId, CONFIG.Reddit.AppSecret)
+	req.SetBasicAuth(c.redditAppId, c.redditAppSecret)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.WithError(err).Error("Failed to login to Reddit")
@@ -91,8 +92,8 @@ func randInt(min int, max int) int {
 
 func (c *CatLady) getReddit(sub string) RedditResponse {
 	log.WithField("subreddit", sub).Debug("Getting Reddit")
-	log.WithField("token", token).Debug("token value")
-	if c.token.ExpiresIn == 0 || c.time.Since(lastTokenTime).Seconds() >= float64(c.token.ExpiresIn) {
+	log.WithField("token", c.token).Debug("token value")
+	if c.token.ExpiresIn == 0 || time.Since(c.lastTokenTime).Seconds() >= float64(c.token.ExpiresIn) {
 		c.getToken()
 	}
 	client := &http.Client{}
@@ -140,13 +141,13 @@ func cleanURL(url string) string {
 
 func (c *CatLady) GetImage(sub string) string {
 	var submissions RedditResponse
-	if subs, found := c.cat_cache.Get(sub); !found {
+	if subs, found := c.catCache.Get(sub); !found {
 		log.WithFields(log.Fields{
 			"cache":     false,
 			"subreddit": sub,
 		}).Info("Subreddit not found in cache.")
 		submissions = c.getReddit(sub)
-		c.cat_cache.Set(sub, submissions, cache.DefaultExpiration)
+		c.catCache.Set(sub, submissions, cache.DefaultExpiration)
 		log.WithField("subreddit", submissions.Data.Children[0].Data.URL).Debug("Subreddit value")
 	} else {
 		log.WithFields(log.Fields{
@@ -167,7 +168,7 @@ func (c *CatLady) GetImage(sub string) string {
 		if !s.Over18 {
 			if checkForImage(s.URL) {
 				noImage = false
-				return s.URL
+				return cleanURL(s.URL)
 			}
 		} else {
 			log.WithField("nsfw", "true").Info("NSFW Link Found.")

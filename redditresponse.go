@@ -1,4 +1,4 @@
-package crazycatlady
+package catlady
 
 type RedditResponse struct {
 	Kind string `json:"kind"`
