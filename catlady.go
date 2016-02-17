@@ -41,6 +41,7 @@ type CatLady struct {
 	subreddits      map[string]string
 }
 
+// Constructs a new Catlady object including creating a new cache object.
 func NewCatLady(username string, password string, appid string, appsecret string, subreddits map[string]string, logLevel log.Level) *CatLady {
 	log.SetLevel(logLevel)
 	c := &CatLady{
@@ -139,6 +140,7 @@ func cleanURL(url string) string {
 	return url
 }
 
+// Returns a url for a given reddit
 func (c *CatLady) GetImage(sub string) string {
 	var submissions RedditResponse
 	if subs, found := c.catCache.Get(sub); !found {
