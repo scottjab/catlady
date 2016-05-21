@@ -132,9 +132,10 @@ func checkForImage(url string) bool {
 func cleanURL(url string) string {
 	if strings.Contains(url, "imgur") {
 		log.WithField("url", url).Debug("Found imgur url")
-		if url[len(url)-1:] == "/" {
+		extention := url[len(url)-3]
+		if extention != "gif" && extention != "jpg" && extention != "ifv" && extention != "png" {
 			url = url + ".jpg"
-		} else if url[len(url)-3:] == "gif" {
+		} else if extention == "gif" {
 			url = url + "v"
 			log.WithField("url", url).Debug("Converting to gifv")
 		}
