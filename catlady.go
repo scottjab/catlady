@@ -3,14 +3,16 @@ package catlady
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/patrickmn/go-cache"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/patrickmn/go-cache"
+	"github.com/scottjab/goimgpurge"
 )
 
 var (
@@ -175,7 +177,8 @@ func (c *CatLady) GetImage(sub string) string {
 		if !s.Over18 {
 			if checkForImage(s.URL) {
 				noImage = false
-				return cleanURL(s.URL)
+				parsedUrl, _ := imgpurge.Purge(s.URL)
+				return parsedUrl.String()
 			}
 		} else {
 			log.WithField("nsfw", "true").Info("NSFW Link Found.")
